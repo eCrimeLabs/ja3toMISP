@@ -9,6 +9,11 @@ However on top is added the integration into MISP for automatically creating the
 
 When an PCAP file is parsed and the JA3 signatures are imported, ensure to add the description text for what type of signature it is related to.
 
+Each Signature is created as a MISP object with the following Information:
+- Ja3-fingerprint-md5
+- IP source
+- IP destination
+- First-Seen
 
 ### Remember to create the file "keys.py":
 ```
