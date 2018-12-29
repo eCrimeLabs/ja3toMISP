@@ -67,13 +67,10 @@ def init(misp_url, misp_key):
     return PyMISP(misp_url, misp_key, misp_verifycert, 'json', debug=False, proxies=proxies)
 
 def create_misp_objects(ja3_objects, misp_event, pcap_filename, misp, to_ids):
-    #create_misp_objects(ja3_object, misp_event, pcap_filename)
     event = MISPEvent()
     event.from_dict(**misp_event)
 
-    # is_in_misp_event(misp_event, ja3_checksum)
     print ("- Creating object(s)")
-#    pprint.pprint(ja3_object)
     for ja3_object in ja3_objects:
         ja3_digest = (ja3_objects[ja3_object]['ja3_digest'])
         destination_ip = (ja3_objects[ja3_object]['destination_ip'])
@@ -351,7 +348,8 @@ def main():
         # Create a new event in MISP
         try:
             misp = init(misp_url, misp_key)
-            misp_event = misp.new_event(info="Test Event", distribution=0, threat_level_id=4, analysis=1, published=False)
+            # distribution = "Your organisation only", threat level = "Undefined", Analysis = "Ongoing"
+            misp_event = misp.new_event(info=args.create, distribution=0, threat_level_id=4, analysis=1, published=False)
 
             create_misp_objects(ja3_objects, misp_event['Event'], pcap_filename, misp, to_ids)
         except KeyError as e:
