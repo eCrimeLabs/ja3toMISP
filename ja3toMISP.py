@@ -352,14 +352,7 @@ def main():
         pass
     else:
         pass
-#        for record in ja3_objects:
-#            tmp = '[{dest}:{port}] JA3: {segment} --> {digest}'
-#            tmp = tmp.format(dest=record['destination_ip'],
-#                             port=record['destination_port'],
-#                             segment=record['ja3'],
-#                             digest=record['ja3_digest'])
-#            print(tmp)
-
+        
 
 if __name__ == "__main__":
         main()
