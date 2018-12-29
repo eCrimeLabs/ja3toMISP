@@ -39,7 +39,7 @@ from hashlib import md5
 from pymisp import MISPObject
 from pymisp import PyMISP
 from pymisp import MISPEvent
-from keys import misp_url, misp_key, misp_verifycert
+from keys import misp_url, misp_key, misp_verifycert, proxies
 
 __author__ = "Dennis Rand - eCrimeLabs"
 __copyright__ = "Copyright (c) 2019, eCrimeLabs"
@@ -64,7 +64,7 @@ def splash():
     print ("----------------------------------------\r\n")
 
 def init(misp_url, misp_key):
-    return PyMISP(misp_url, misp_key, misp_verifycert, 'json', debug=False)
+    return PyMISP(misp_url, misp_key, misp_verifycert, 'json', debug=False, proxies=proxies)
 
 def create_misp_objects(ja3_objects, misp_event, pcap_filename, misp, to_ids):
     #create_misp_objects(ja3_object, misp_event, pcap_filename)
@@ -349,10 +349,18 @@ def main():
         create_misp_objects(ja3_objects, misp_event, pcap_filename, misp, to_ids)
     elif (args.create):
         # Create a new event in MISP
+        try:
+            misp = init(misp_url, misp_key)
+            misp_event = misp.new_event(info="Test Event", distribution=0, threat_level_id=4, analysis=1, published=False)
+
+            create_misp_objects(ja3_objects, misp_event['Event'], pcap_filename, misp, to_ids)
+        except KeyError as e:
+            print ("An error occoured creating a new MISP event.")
+            sys.exit(0)
         pass
     else:
         pass
-        
+
 
 if __name__ == "__main__":
         main()
