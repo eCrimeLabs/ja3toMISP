@@ -36,9 +36,7 @@ import sys
 import pprint
 from datetime import datetime
 from hashlib import md5
-from pymisp import MISPObject
-from pymisp import PyMISP
-from pymisp import MISPEvent
+from pymisp import PyMISP, MISPEvent, MISPObject, MISPSighting
 from keys import misp_url, misp_key, misp_verifycert, proxies
 
 __author__ = "Dennis Rand - eCrimeLabs"
@@ -56,6 +54,8 @@ GREASE_TABLE = {0x0a0a: True, 0x1a1a: True, 0x2a2a: True, 0x3a3a: True,
 SSL_PORT = 443
 TLS_HANDSHAKE = 22
 
+sightings_to_add = []
+
 def splash():
     print ("\r\n")
     print ('JA3 fingerprint to MISP Objects')
@@ -66,6 +66,12 @@ def splash():
 def init(misp_url, misp_key):
     return PyMISP(misp_url, misp_key, misp_verifycert, 'json', debug=False, proxies=proxies)
 
+def sighting(uuid, value, type, source, timestamp, misp):
+    '''Add a sighting'''
+    s = MISPSighting()
+    s.from_dict(value=value, source=source, timestamp=int(timestamp), type=type)
+    misp.set_sightings(s)
+
 def create_misp_objects(ja3_objects, misp_event, pcap_filename, misp, to_ids):
     event = MISPEvent()
     event.from_dict(**misp_event)
@@ -75,23 +81,25 @@ def create_misp_objects(ja3_objects, misp_event, pcap_filename, misp, to_ids):
         ja3_digest = (ja3_objects[ja3_object]['ja3_digest'])
         destination_ip = (ja3_objects[ja3_object]['destination_ip'])
         source_ip = (ja3_objects[ja3_object]['source_ip'])
+        unixtime  = (ja3_objects[ja3_object]['timestamp'])
         timestamp = (ja3_objects[ja3_object]['time'])
 
         if not ( is_in_misp_event(misp_event, ja3_digest, destination_ip) ):
             print ("\t " + ja3_digest + " -> " + destination_ip + " -> " + source_ip)
             misp_object = event.add_object(name='ja3', comment=pcap_filename, distribution=5, standalone=False)
             obj_attr = misp_object.add_attribute('ja3-fingerprint-md5', value=ja3_digest, distribution=5)
+
+            sightings_to_add.append((obj_attr['uuid'], ja3_digest, 0, "PCAP", unixtime))
+
             misp_object.add_attribute('ip-src', value=source_ip, to_ids=to_ids, distribution=5)
             misp_object.add_attribute('ip-dst', value=destination_ip, to_ids=to_ids, distribution=5)
             misp_object.add_attribute('first-seen', value=timestamp, disable_correlation=True, distribution=5)
-
     try:
         misp.update(event)
     except (KeyError, RuntimeError, TypeError, NameError):
         print ("An error occoured when updating the event")
         sys.exit()
-
-    print ("- The MISP objects seems to have been added correctly to the event.... \r\n\r\n")
+    print ("- The MISP objects seems to have been added correctly to the event \r\n")
 
 def is_in_misp_event(misp_event, ja3_digest, destination_ip):
     found = False
@@ -319,6 +327,9 @@ def main():
                         help="Add to an allready existing event (input has to be UUID)")
     parser.add_argument("-i", "--ids", required=False, action="store_true", default=False,
                         help="Adds the to_ids to the source and destination IP's")
+    parser.add_argument("-s", "--sightings", required=False, action="store_true", default=False,
+                        help="Adds sighting to the JA3-fingerprint-md5")
+
     args = parser.parse_args()
 
     # Use an iterator to process each line of the file
@@ -335,6 +346,7 @@ def main():
     if (args.json):
         ja3_objects = json.dumps(ja3_objects, indent=4, sort_keys=True)
         print(ja3_objects)
+        sys.exit(0)
     elif (args.uuid):
         # Add to existing UUID
         try:
@@ -350,7 +362,6 @@ def main():
             misp = init(misp_url, misp_key)
             # distribution = "Your organisation only", threat level = "Undefined", Analysis = "Ongoing"
             misp_event = misp.new_event(info=args.create, distribution=0, threat_level_id=4, analysis=1, published=False)
-
             create_misp_objects(ja3_objects, misp_event['Event'], pcap_filename, misp, to_ids)
         except KeyError as e:
             print ("An error occoured creating a new MISP event.")
@@ -359,6 +370,11 @@ def main():
     else:
         pass
 
-
+    if (args.sightings):
+        print ("- Adding Sightings to JA3-fingerprint-md5 \r\n")
+        #uuid, value, type, source, timestamp
+        for suuid, svalue, stype, ssource, stimetamp in sightings_to_add:
+            sighting(suuid, svalue, stype, ssource, stimetamp, misp)
+    print ("\r\n")
 if __name__ == "__main__":
         main()
