@@ -2,6 +2,9 @@
 
 Extracts JA3 fingerprints from a PCAP and adds them to an event in MISP as objects
 
+Read more on eCrimeLabs Blog post:
+https://www.ecrimelabs.com/blog/2018/12/30/ja3-to-misp-tool-released
+
 This is a further development of https://github.com/salesforce/ja3/tree/master/python
 "JA3 provides fingerprinting services on SSL packets. This is a python wrapper around JA3 logic in order to produce valid JA3 fingerprints from an input PCAP file."
 

@@ -3,3 +3,5 @@ keys.py
 sample.pcap
 sample.pcap.pcapng
 __pycache__/keys.cpython-37.pyc
+__pycache__/keys.cpython-37.pyc
+*.pyc
