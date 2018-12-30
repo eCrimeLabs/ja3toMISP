@@ -59,5 +59,6 @@ optional arguments:
   -u UUID, --uuid UUID  Add to an allready existing event (input has to be
                         UUID)
   -i, --ids             Adds the to_ids to the source and destination IP's
+  -s, --sightings       Adds sighting to the JA3-fingerprint-md5
 
 ```
